@@ -1,0 +1,6 @@
+services:
+  zaproxy:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    volumes:
+      - ./reports/:/zap/wrk/:rw
+    command: zap-${SCAN_TYPE}.py -t https://${SCAN_TARGET} -w ${SCAN_TARGET}_report.md -r ${SCAN_HTML_REPORT_NAME}.html
