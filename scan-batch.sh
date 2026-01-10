@@ -44,23 +44,23 @@ WARNINGS=0
 # Scan each target
 for i in "${!TARGETS[@]}"; do
     target="${TARGETS[$i]}"
-    
+
     # Skip empty lines and comments
     if [[ -z "$target" ]] || [[ "$target" =~ ^[[:space:]]*# ]]; then
         continue
     fi
-    
+
     # Extract scan type if specified (format: URL [scan-type])
     read -r url scan_type <<< "$target"
     scan_type="${scan_type:-baseline}"
-    
+
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "[$((i+1))/${#TARGETS[@]}] Scanning: $url"
     echo "Scan type: $scan_type"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    
+
     if ./scan.sh "$url" "$scan_type"; then
         SUCCESSFUL=$((SUCCESSFUL + 1))
         echo "✓ Success"
@@ -74,7 +74,7 @@ for i in "${!TARGETS[@]}"; do
             echo "✗ Failed"
         fi
     fi
-    
+
     # Small delay between scans
     if [ $i -lt $((${#TARGETS[@]} - 1)) ]; then
         echo ""

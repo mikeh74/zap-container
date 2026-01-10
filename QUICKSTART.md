@@ -123,7 +123,7 @@ Edit `configs/<domain>/zap.yaml`:
   run: |
     ./scan.sh https://staging.example.com
     ./generate-index.sh
-    
+
 - name: Upload Reports
   uses: actions/upload-artifact@v3
   with:

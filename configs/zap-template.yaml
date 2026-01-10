@@ -28,7 +28,7 @@ jobs:
       maxAlertsPerRule: 10
       scanOnlyInScope: true
       enableTags: false
-  
+
   # Spider the target
   - type: spider
     parameters:
@@ -38,31 +38,31 @@ jobs:
       maxChildren: 10
       acceptCookies: true
       handleODataParametersVisited: false
-  
+
   # Wait for passive scanning to complete
   - type: passiveScan-wait
     parameters:
       maxDuration: 10  # Minutes to wait
-  
+
   # Optional: AJAX Spider for JavaScript-heavy sites
   # - type: ajaxSpider
   #   parameters:
   #     url: https://example.com
   #     maxDuration: 5
   #     browserId: firefox-headless
-  
+
   # Optional: Active scan (more thorough but slower)
   # - type: activeScan
   #   parameters:
   #     policy: "Default Policy"
   #     context: "baseline"
-  
+
   # Generate JSON summary
   - type: outputSummary
     parameters:
       format: Long
       summaryFile: /zap/wrk/summary.json
-  
+
   # Generate HTML report
   - type: report
     parameters:
@@ -71,7 +71,7 @@ jobs:
       reportFile: report.html
       reportTitle: ZAP Security Scan Report
       reportDescription: Security scan results
-  
+
   # Generate Markdown report
   - type: report
     parameters:

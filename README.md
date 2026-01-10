@@ -2,6 +2,8 @@
 
 Flexible Docker-based setup for running OWASP ZAP security scans against multiple websites with organized, dated reports.
 
+Now available as a **Python CLI tool** for easier installation and use!
+
 ## Features
 
 - 🎯 Scan any website with a single command
@@ -10,42 +12,146 @@ Flexible Docker-based setup for running OWASP ZAP security scans against multipl
 - 📊 HTML index page for all scans
 - 🔧 Customizable scan configurations per domain
 - 📝 Multiple report formats (HTML, Markdown, JSON)
+- 🐍 **NEW:** Python CLI with Click framework
+- 🌐 **NEW:** Built-in HTTP server for viewing reports
+- ✨ **NEW:** Pre-commit hooks for code quality
+
+## Installation
+
+### Option 1: Install as Python Package (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/mikeh74/zap-container.git
+cd zap-container
+
+# Install the package
+pip install -e .
+
+# Or install with development dependencies
+pip install -e ".[dev]"
+```
+
+### Option 2: Use Shell Scripts (Traditional)
+
+The original shell scripts are still available for direct use:
+
+```bash
+chmod +x scan.sh generate-index.sh scan-batch.sh
+```
 
 ## Quick Start
 
-### 1. Run a Quick Scan
+### Python CLI (Recommended)
 
 ```bash
-# Make scripts executable (first time only)
-chmod +x scan.sh generate-index.sh
+# Run a baseline scan
+zap-scan scan https://www.example.com
 
+# Run a full scan (more thorough)
+zap-scan scan https://www.example.com --scan-type full
+
+# Generate the index page
+zap-scan generate-index
+
+# Serve reports in browser
+zap-scan serve
+```
+
+### Shell Scripts (Traditional)
+
+```bash
 # Run a baseline scan
 ./scan.sh https://www.example.com
 
 # Run a full scan (more thorough)
 ./scan.sh https://www.example.com full
-```
 
-### 2. View Reports
-
-```bash
 # Generate the index page
 ./generate-index.sh
-
-# Open in browser (macOS)
-open reports/index.html
-
-# Or (Linux)
-xdg-open reports/index.html
 ```
+
+## Python CLI Commands
+
+### `zap-scan scan`
+
+Run a ZAP security scan on a target URL.
+
+```bash
+# Basic baseline scan
+zap-scan scan https://www.example.com
+
+# Full active scan
+zap-scan scan https://www.example.com --scan-type full
+
+# API scan (requires config)
+zap-scan scan https://api.example.com --scan-type api
+
+# Use custom directories
+zap-scan scan https://www.example.com --reports-dir my-reports --configs-dir my-configs
+```
+
+### `zap-scan batch`
+
+Run batch scans on multiple targets from a config file.
+
+```bash
+# Scan targets from default file (targets.txt)
+zap-scan batch
+
+# Scan targets from custom file
+zap-scan batch --config my-targets.txt
+
+# Use custom delay between scans
+zap-scan batch --delay 10
+```
+
+### `zap-scan generate-index`
+
+Generate an HTML index page for all scan reports.
+
+```bash
+# Generate index with default reports directory
+zap-scan generate-index
+
+# Generate index for custom reports directory
+zap-scan generate-index --reports-dir my-reports
+```
+
+### `zap-scan serve`
+
+Start an HTTP server to view reports in a browser.
+
+```bash
+# Serve reports on default port (8000)
+zap-scan serve
+
+# Serve reports on custom port
+zap-scan serve --port 8080
+
+# Serve custom reports directory
+zap-scan serve --reports-dir my-reports
+```
+
+Then open http://localhost:8000/index.html in your browser.
 
 ## Directory Structure
 
 After running scans, your directory will look like this:
 
 ```
-├── scan.sh                      # Main scan script
-├── generate-index.sh            # Index generator
+├── pyproject.toml               # Python package configuration
+├── .pre-commit-config.yaml      # Pre-commit hooks configuration
+├── zap_scan/                    # Python package source
+│   ├── __init__.py
+│   ├── cli.py                  # CLI commands
+│   ├── scanner.py              # Core scanning logic
+│   ├── batch.py                # Batch scanning
+│   ├── index_generator.py      # HTML index generation
+│   └── server.py               # HTTP server
+├── scan.sh                      # Shell script (legacy)
+├── scan-batch.sh               # Shell script (legacy)
+├── generate-index.sh            # Shell script (legacy)
 ├── configs/                     # Configuration files
 │   ├── zap-template.yaml       # Template for custom configs
 │   └── <domain>/               # Domain-specific configs
@@ -60,9 +166,22 @@ After running scans, your directory will look like this:
 └── compose.yml                  # Docker Compose (alternative method)
 ```
 
-## Usage
+## Usage with Python CLI
 
 ### Basic Scanning
+
+```bash
+# Baseline scan (quick, passive + spider)
+zap-scan scan https://www.example.com
+
+# Full scan (includes active scanning)
+zap-scan scan https://www.example.com --scan-type full
+
+# API scan (requires config file)
+zap-scan scan https://api.example.com --scan-type api
+```
+
+### Basic Scanning (Shell Scripts)
 
 ```bash
 # Baseline scan (quick, passive + spider)
@@ -187,7 +306,14 @@ docker ps
 
 ### Scheduled Scans
 
-Add to crontab for automated scanning:
+Add to crontab for automated scanning (using Python CLI):
+
+```bash
+# Scan every day at 2 AM
+0 2 * * * cd /path/to/zap && zap-scan scan https://www.example.com && zap-scan generate-index
+```
+
+Or with shell scripts:
 
 ```bash
 # Scan every day at 2 AM
@@ -196,13 +322,34 @@ Add to crontab for automated scanning:
 
 ### CI/CD Integration
 
+GitHub Actions example using Python CLI:
+
+```yaml
+# GitHub Actions example
+- name: Install ZAP Scan CLI
+  run: |
+    pip install -e .
+
+- name: Run ZAP Scan
+  run: |
+    zap-scan scan https://staging.example.com
+
+- name: Upload Reports
+  uses: actions/upload-artifact@v3
+  with:
+    name: zap-reports
+    path: reports/
+```
+
+Or using shell scripts:
+
 ```yaml
 # GitHub Actions example
 - name: Run ZAP Scan
   run: |
     chmod +x scan.sh
     ./scan.sh https://staging.example.com
-    
+
 - name: Upload Reports
   uses: actions/upload-artifact@v3
   with:
@@ -211,6 +358,22 @@ Add to crontab for automated scanning:
 ```
 
 ### Multiple Targets
+
+Using Python CLI with batch command:
+
+```bash
+# Create targets.txt with your URLs
+cat > targets.txt << EOF
+https://www.example.com
+https://api.example.com full
+https://admin.example.com
+EOF
+
+# Run batch scan
+zap-scan batch
+```
+
+Or using shell script:
 
 ```bash
 #!/bin/bash
@@ -229,6 +392,76 @@ done
 
 ./generate-index.sh
 echo "All scans complete!"
+```
+
+## Development
+
+### Setting Up Development Environment
+
+```bash
+# Clone the repository
+git clone https://github.com/mikeh74/zap-container.git
+cd zap-container
+
+# Install in development mode with dev dependencies
+pip install -e ".[dev]"
+
+# Install pre-commit hooks
+pre-commit install
+```
+
+### Pre-commit Hooks
+
+This project uses pre-commit hooks to maintain code quality:
+
+- **black**: Code formatting
+- **isort**: Import sorting
+- **flake8**: Code linting
+- **trailing-whitespace**: Remove trailing whitespace
+- **end-of-file-fixer**: Ensure files end with newline
+- **check-yaml**: Validate YAML files
+- **check-toml**: Validate TOML files
+
+```bash
+# Run pre-commit on all files
+pre-commit run --all-files
+
+# Run pre-commit on staged files (automatic on commit)
+git commit
+```
+
+### Code Style
+
+The project follows these conventions:
+
+- **Line length**: 100 characters
+- **Formatter**: Black
+- **Import sorting**: isort with Black profile
+- **Type hints**: Encouraged but not required
+
+### Running Linters Manually
+
+```bash
+# Format code with black
+black zap_scan/
+
+# Sort imports
+isort zap_scan/
+
+# Check with flake8
+flake8 zap_scan/ --max-line-length=100 --extend-ignore=E203,W503,W293,E501
+```
+
+### Publishing to PyPI (Future)
+
+When ready to publish to PyPI:
+
+```bash
+# Build package
+python -m build
+
+# Upload to PyPI (requires credentials)
+python -m twine upload dist/*
 ```
 
 ## Resources
@@ -252,7 +485,7 @@ authorization before scanning any website.
 
 ## Additional Resources
 
-### Scan Types 
+### Scan Types
 
 You can read more about the scane types here:
 * [Baseline](https://www.zaproxy.org/docs/docker/baseline-scan/)
