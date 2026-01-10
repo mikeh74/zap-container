@@ -1,0 +1,15 @@
+# ZAP Batch Scan Targets
+# Add one URL per line
+# Optionally specify scan type: URL [baseline|full|api]
+
+# Example entries:
+# https://www.example.com
+# https://www.example.com baseline
+# https://api.example.com full
+# https://app.example.com
+
+# Your targets:
+https://www.tmc.ac.uk
+https://www.ucenmanchester.ac.uk
+https://www.totalpeople.co.uk
+https://www.mollearn.com

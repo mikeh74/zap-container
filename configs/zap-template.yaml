@@ -1,0 +1,82 @@
+# ZAP Configuration Template
+# Copy this file to configs/<domain>/zap.yaml and customize for your target
+
+env:
+  contexts:
+  - name: baseline
+    urls:
+    - https://example.com  # Change to your target URL
+    includePaths: []
+    excludePaths:
+    # Add paths to exclude from scanning
+    # - ".*logout.*"
+    # - ".*signout.*"
+    # - ".*/admin/.*"
+    authentication:
+      method: "manual"
+    sessionManagement:
+      method: "cookie"
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+
+jobs:
+  # Configure passive scanning
+  - type: passiveScan-config
+    parameters:
+      maxAlertsPerRule: 10
+      scanOnlyInScope: true
+      enableTags: false
+  
+  # Spider the target
+  - type: spider
+    parameters:
+      url: https://example.com  # Change to match your target
+      maxDuration: 5  # Minutes to spider (adjust based on site size)
+      maxDepth: 5
+      maxChildren: 10
+      acceptCookies: true
+      handleODataParametersVisited: false
+  
+  # Wait for passive scanning to complete
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 10  # Minutes to wait
+  
+  # Optional: AJAX Spider for JavaScript-heavy sites
+  # - type: ajaxSpider
+  #   parameters:
+  #     url: https://example.com
+  #     maxDuration: 5
+  #     browserId: firefox-headless
+  
+  # Optional: Active scan (more thorough but slower)
+  # - type: activeScan
+  #   parameters:
+  #     policy: "Default Policy"
+  #     context: "baseline"
+  
+  # Generate JSON summary
+  - type: outputSummary
+    parameters:
+      format: Long
+      summaryFile: /zap/wrk/summary.json
+  
+  # Generate HTML report
+  - type: report
+    parameters:
+      template: traditional-html
+      reportDir: /zap/wrk/
+      reportFile: report.html
+      reportTitle: ZAP Security Scan Report
+      reportDescription: Security scan results
+  
+  # Generate Markdown report
+  - type: report
+    parameters:
+      template: traditional-md
+      reportDir: /zap/wrk/
+      reportFile: report.md
+      reportTitle: ZAP Security Scan Report
+      reportDescription: Security scan results

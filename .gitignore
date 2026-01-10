@@ -1,2 +1,19 @@
-.env
+# ZAP Reports - these are generated files
 reports/
+
+# Keep the reports directory structure
+!reports/.gitkeep
+
+# Old structure (can be removed after migration)
+www_*/
+wrk/
+
+# macOS
+.DS_Store
+
+# Temporary files
+*.tmp
+*.log
+
+# Docker
+.env

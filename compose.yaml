@@ -1,6 +1,15 @@
 services:
-  zaproxy:
+  zap:
     image: ghcr.io/zaproxy/zaproxy:stable
     volumes:
-      - ./reports/:/zap/wrk/:rw
-    command: zap-${SCAN_TYPE}.py -t https://${SCAN_TARGET} -w ${SCAN_TARGET}_report.md -r ${SCAN_HTML_REPORT_NAME}.html
+      - ${REPORT_DIR:-./reports}:/zap/wrk:rw
+      - ${CONFIG_FILE:-./configs/default.yaml}:/zap/config.yaml:ro
+    environment:
+      - ZAP_PORT=${ZAP_PORT:-8080}
+    command: >
+      ${SCAN_TYPE:-zap-baseline.py}
+      -t ${TARGET_URL:-https://example.com}
+      -r ${REPORT_HTML:-report.html}
+      -w ${REPORT_MD:-report.md}
+      -J ${REPORT_JSON:-report.json}
+      ${EXTRA_ARGS:-}
