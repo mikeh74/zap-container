@@ -23,13 +23,19 @@ def main():
 
 
 @main.command()
-@click.argument("url")
+@click.argument("url", required=False)
 @click.option(
     "--scan-type",
     "-t",
     type=click.Choice(["baseline", "full", "api"], case_sensitive=False),
     default="baseline",
     help="Type of scan to run (baseline, full, or api)",
+)
+@click.option(
+    "--targets-file",
+    "-f",
+    type=click.Path(exists=True),
+    help="Path to file containing list of target URLs to scan",
 )
 @click.option(
     "--reports-dir",
@@ -43,8 +49,8 @@ def main():
     default="configs",
     help="Directory containing config files (default: configs)",
 )
-def scan(url, scan_type, reports_dir, configs_dir):
-    """Run a ZAP security scan on a target URL.
+def scan(url, scan_type, targets_file, reports_dir, configs_dir):
+    """Run a ZAP security scan on a target URL or multiple targets from a file.
 
     Examples:
 
@@ -59,16 +65,91 @@ def scan(url, scan_type, reports_dir, configs_dir):
         \b
         # API scan (requires config)
         zap-scan scan https://api.example.com --scan-type api
+
+        \b
+        # Scan multiple targets from a file
+        zap-scan scan --targets-file targets.txt
+
+        \b
+        # Scan multiple targets with custom scan type
+        zap-scan scan --targets-file targets.txt --scan-type full
     """
+    # Validate input: must provide either URL or targets file
+    if not url and not targets_file:
+        click.echo("Error: Must provide either a URL or --targets-file", err=True)
+        sys.exit(1)
+
+    if url and targets_file:
+        click.echo("Error: Cannot specify both URL and --targets-file", err=True)
+        sys.exit(1)
+
     scanner = ZAPScanner(reports_dir=reports_dir, configs_dir=configs_dir)
 
     try:
-        exit_code = scanner.run_scan(url, scan_type)
-        print()
-        print("💡 Generate index page with: zap-scan generate-index")
-        print("💡 Serve reports with: zap-scan serve")
-        print()
-        sys.exit(exit_code)
+        if targets_file:
+            # Scan multiple targets from file
+            batch_scanner = BatchScanner(scanner)
+            targets = batch_scanner.read_targets(targets_file)
+
+            if not targets:
+                click.echo(f"Error: No targets found in {targets_file}", err=True)
+                sys.exit(1)
+
+            print(f"Scanning {len(targets)} target(s) from {targets_file}...")
+            print()
+
+            failed = 0
+            warnings = 0
+            successful = 0
+
+            for i, (target_url, target_scan_type) in enumerate(targets, 1):
+                # Use scan type from file if specified, otherwise use CLI option
+                effective_scan_type = (
+                    target_scan_type if len(str(target_scan_type).split()) > 0 else scan_type
+                )
+
+                print(f"[{i}/{len(targets)}] Scanning: {target_url} ({effective_scan_type})")
+                try:
+                    exit_code = scanner.run_scan(target_url, effective_scan_type)
+                    if exit_code == 0:
+                        successful += 1
+                        print("✓ Success")
+                    elif exit_code == 1:
+                        warnings += 1
+                        print("⚠ Completed with warnings")
+                    else:
+                        failed += 1
+                        print("✗ Failed")
+                except Exception as e:
+                    failed += 1
+                    print(f"✗ Error: {e}")
+                print()
+
+            # Generate index page
+            print("Generating index page...")
+            generator = ReportIndexGenerator(reports_dir)
+            generator.generate_index()
+
+            print()
+            print(f"Completed: {successful} successful, {warnings} warnings, {failed} failed")
+            print("💡 View reports with: zap-scan serve")
+            print()
+
+            # Exit with appropriate code
+            if failed > 0:
+                sys.exit(2)
+            elif warnings > 0:
+                sys.exit(1)
+            else:
+                sys.exit(0)
+        else:
+            # Single URL scan
+            exit_code = scanner.run_scan(url, scan_type)
+            print()
+            print("💡 Generate index page with: zap-scan generate-index")
+            print("💡 Serve reports with: zap-scan serve")
+            print()
+            sys.exit(exit_code)
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)

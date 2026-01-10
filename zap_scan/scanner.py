@@ -58,7 +58,11 @@ class ZAPScanner:
         """Generate report file names with timestamp."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         report_base = f"{domain_clean}_{timestamp}"
-        return (f"{report_base}.html", f"{report_base}.md", f"{report_base}.json")
+        return (
+            f"{report_base}.html",
+            f"{report_base}.md",
+            f"{report_base}.json",
+        )
 
     def build_docker_command(
         self,
