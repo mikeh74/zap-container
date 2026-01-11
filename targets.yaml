@@ -1,0 +1,29 @@
+# ZAP Batch Scan Targets Configuration (YAML Format)
+# This format allows for more configuration options per target
+
+targets:
+  # Basic scan with just URL (defaults to baseline scan type)
+  - url: https://www.tmc.ac.uk
+
+  # Scan with explicit scan type
+  - url: https://www.ucenmanchester.ac.uk
+    scan_type: baseline
+
+  # Full scan (includes active scanning)
+  - url: https://www.totalpeople.co.uk
+    scan_type: full
+
+  # Another baseline scan
+  - url: https://www.mollearn.com
+    scan_type: baseline
+
+  # Future options that could be added:
+  # - url: https://secure.example.com
+  #   scan_type: full
+  #   credentials:
+  #     username: testuser
+  #     password: testpass
+  #   exclude_paths:
+  #     - ".*logout.*"
+  #     - ".*signout.*"
+  #   custom_config: path/to/custom/zap.yaml
