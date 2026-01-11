@@ -2,7 +2,10 @@
 
 # Scan multiple websites in batch
 # Usage: ./scan-batch.sh [config-file]
-# Config file format: one URL per line
+# Config file format: one URL per line (text format only)
+#
+# Note: This shell script only supports plain text config files.
+# For YAML format support, use the Python CLI: zap-scan batch --config targets.yaml
 
 set -e
 
@@ -13,10 +16,13 @@ if [ ! -f "$CONFIG_FILE" ]; then
     echo ""
     echo "Usage: $0 [config-file]"
     echo ""
-    echo "Create a file with one URL per line:"
+    echo "This script supports plain text config files (one URL per line):"
     echo "  https://www.example.com"
     echo "  https://api.example.com"
     echo "  https://app.example.com"
+    echo ""
+    echo "For YAML format support, use the Python CLI:"
+    echo "  zap-scan batch --config targets.yaml"
     echo ""
     exit 1
 fi
