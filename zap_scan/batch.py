@@ -40,6 +40,27 @@ class BatchScanner:
 
         return targets
 
+    def _validate_scan_type(self, scan_type: str, url: str = None) -> str:
+        """Validate scan type and provide helpful error message.
+
+        Args:
+            scan_type: The scan type to validate
+            url: Optional URL for more helpful error messages
+
+        Returns:
+            The validated scan type
+
+        Raises:
+            ValueError: If scan type is invalid
+        """
+        if scan_type not in ScanType.all_types():
+            url_info = f" for {url}" if url else ""
+            raise ValueError(
+                f"Invalid scan type '{scan_type}'{url_info}. "
+                f"Must be one of: {', '.join(ScanType.all_types())}"
+            )
+        return scan_type
+
     def _read_text_targets(self, config_path: Path) -> List[Tuple[str, str]]:
         """Read targets from plain text format.
 
@@ -61,6 +82,9 @@ class BatchScanner:
 
                 url = parts[0]
                 scan_type = parts[1] if len(parts) > 1 else ScanType.BASELINE
+
+                # Validate scan type
+                scan_type = self._validate_scan_type(scan_type, url)
 
                 targets.append((url, scan_type))
 
@@ -100,11 +124,7 @@ class BatchScanner:
             scan_type = item.get("scan_type", ScanType.BASELINE)
 
             # Validate scan type
-            if scan_type not in ScanType.all_types():
-                raise ValueError(
-                    f"Invalid scan type '{scan_type}' for {url}. "
-                    f"Must be one of: {', '.join(ScanType.all_types())}"
-                )
+            scan_type = self._validate_scan_type(scan_type, url)
 
             targets.append((url, scan_type))
 

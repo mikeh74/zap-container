@@ -63,12 +63,14 @@ zap/
 #     - url: https://api.example.com
 #       scan_type: full
 
-# Run batch scan
+# Run batch scan with shell script (text format only)
 ./scan-batch.sh
 
-# Or use a different file:
+# Or use a different text file:
 ./scan-batch.sh my-sites.txt
-./scan-batch.sh my-sites.yaml
+
+# For YAML format, use Python CLI:
+zap-scan batch --config targets.yaml
 ```
 
 ### Migrate Old Reports
