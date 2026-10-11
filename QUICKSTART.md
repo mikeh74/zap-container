@@ -21,7 +21,8 @@ zap/
 ├── generate-index.sh    # Generate HTML index
 ├── scan-batch.sh        # Scan multiple sites
 ├── migrate-reports.sh   # Migrate old reports
-├── targets.txt          # Batch scan targets
+├── targets.txt          # Batch scan targets (text format)
+├── targets.yaml         # Batch scan targets (YAML format, recommended)
 ├── configs/
 │   ├── zap-template.yaml
 │   └── <domain>/zap.yaml
@@ -50,11 +51,26 @@ zap/
 
 ### Batch Scanning
 ```bash
-# Edit targets.txt first, then:
+# Edit targets.txt or targets.yaml first
+# Text format (targets.txt):
+#   https://www.example.com
+#   https://api.example.com full
+
+# YAML format (targets.yaml) - Recommended for more options:
+#   targets:
+#     - url: https://www.example.com
+#       scan_type: baseline
+#     - url: https://api.example.com
+#       scan_type: full
+
+# Run batch scan with shell script (text format only)
 ./scan-batch.sh
 
-# Or use a different file:
+# Or use a different text file:
 ./scan-batch.sh my-sites.txt
+
+# For YAML format, use Python CLI:
+zap-scan batch --config targets.yaml
 ```
 
 ### Migrate Old Reports
@@ -162,7 +178,8 @@ docker ps
 | `generate-index.sh` | Create HTML index |
 | `scan-batch.sh` | Multiple site scanning |
 | `migrate-reports.sh` | Move old reports |
-| `targets.txt` | Batch scan list |
+| `targets.txt` | Batch scan list (text format) |
+| `targets.yaml` | Batch scan list (YAML format, recommended) |
 | `compose.yml` | Docker Compose config |
 | `configs/zap-template.yaml` | Config template |
 

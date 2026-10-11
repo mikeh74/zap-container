@@ -160,7 +160,7 @@ def scan(url, scan_type, targets_file, reports_dir, configs_dir):
     "--config",
     "-c",
     default="targets.txt",
-    help="Config file with target URLs (default: targets.txt)",
+    help="Config file with target URLs (.txt or .yaml format, default: targets.txt)",
 )
 @click.option(
     "--delay",
@@ -183,21 +183,35 @@ def scan(url, scan_type, targets_file, reports_dir, configs_dir):
 def batch(config, delay, reports_dir, configs_dir):
     """Run batch scans on multiple targets from a config file.
 
-    The config file should contain one URL per line, optionally followed
-    by the scan type (baseline, full, or api).
+    The config file can be in either .txt or .yaml format:
 
-    Example config file format:
+    TEXT FORMAT (.txt):
+        One URL per line, optionally followed by scan type:
 
         \b
         https://www.example.com
         https://www.example.com baseline
         https://api.example.com full
 
+    YAML FORMAT (.yaml or .yml):
+        Structured format allowing more options:
+
+        \b
+        targets:
+          - url: https://www.example.com
+            scan_type: baseline
+          - url: https://api.example.com
+            scan_type: full
+
     Examples:
 
         \b
         # Scan targets from default file (targets.txt)
         zap-scan batch
+
+        \b
+        # Scan targets from YAML file
+        zap-scan batch --config targets.yaml
 
         \b
         # Scan targets from custom file

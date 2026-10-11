@@ -4,6 +4,8 @@ import time
 from pathlib import Path
 from typing import List, Tuple
 
+import yaml
+
 from .scanner import ScanType, ZAPScanner
 
 
@@ -17,6 +19,10 @@ class BatchScanner:
     def read_targets(self, config_file: str) -> List[Tuple[str, str]]:
         """Read targets from config file.
 
+        Supports both .txt and .yaml formats.
+        - .txt format: URL [scan-type] per line
+        - .yaml format: structured YAML with targets list
+
         Returns list of tuples (url, scan_type).
         """
         targets = []
@@ -25,6 +31,42 @@ class BatchScanner:
         if not config_path.exists():
             raise FileNotFoundError(f"Config file not found: {config_file}")
 
+        # Determine format based on file extension
+        if config_path.suffix.lower() in [".yaml", ".yml"]:
+            targets = self._read_yaml_targets(config_path)
+        else:
+            # Default to text format for backward compatibility
+            targets = self._read_text_targets(config_path)
+
+        return targets
+
+    def _validate_scan_type(self, scan_type: str, url: str = None) -> str:
+        """Validate scan type and provide helpful error message.
+
+        Args:
+            scan_type: The scan type to validate
+            url: Optional URL for more helpful error messages
+
+        Returns:
+            The validated scan type
+
+        Raises:
+            ValueError: If scan type is invalid
+        """
+        if scan_type not in ScanType.all_types():
+            url_info = f" for {url}" if url else ""
+            raise ValueError(
+                f"Invalid scan type '{scan_type}'{url_info}. "
+                f"Must be one of: {', '.join(ScanType.all_types())}"
+            )
+        return scan_type
+
+    def _read_text_targets(self, config_path: Path) -> List[Tuple[str, str]]:
+        """Read targets from plain text format.
+
+        Format: URL [scan-type] per line
+        """
+        targets = []
         with open(config_path, "r") as f:
             for line in f:
                 line = line.strip()
@@ -41,7 +83,50 @@ class BatchScanner:
                 url = parts[0]
                 scan_type = parts[1] if len(parts) > 1 else ScanType.BASELINE
 
+                # Validate scan type
+                scan_type = self._validate_scan_type(scan_type, url)
+
                 targets.append((url, scan_type))
+
+        return targets
+
+    def _read_yaml_targets(self, config_path: Path) -> List[Tuple[str, str]]:
+        """Read targets from YAML format.
+
+        Expected format:
+        targets:
+          - url: https://example.com
+            scan_type: baseline
+          - url: https://api.example.com
+            scan_type: full
+        """
+        targets = []
+        with open(config_path, "r") as f:
+            try:
+                config = yaml.safe_load(f)
+            except yaml.YAMLError as e:
+                raise ValueError(f"Failed to parse YAML config: {e}")
+
+        if not config or "targets" not in config:
+            raise ValueError("YAML config must contain 'targets' key")
+
+        if not isinstance(config["targets"], list):
+            raise ValueError("YAML 'targets' must be a list")
+
+        for item in config["targets"]:
+            if not isinstance(item, dict):
+                raise ValueError(f"Each target must be a dictionary, got: {type(item)}")
+
+            if "url" not in item:
+                raise ValueError("Each target must have a 'url' field")
+
+            url = item["url"]
+            scan_type = item.get("scan_type", ScanType.BASELINE)
+
+            # Validate scan type
+            scan_type = self._validate_scan_type(scan_type, url)
+
+            targets.append((url, scan_type))
 
         return targets
 

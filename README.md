@@ -95,9 +95,32 @@ zap-scan scan https://www.example.com --reports-dir my-reports --configs-dir my-
 
 Run batch scans on multiple targets from a config file.
 
+Config files can be in either plain text (.txt) or YAML (.yaml/.yml) format:
+
+**Text format (.txt):**
+```txt
+https://www.example.com
+https://www.example.com baseline
+https://api.example.com full
+```
+
+**YAML format (.yaml):**
+```yaml
+targets:
+  - url: https://www.example.com
+    scan_type: baseline
+  - url: https://api.example.com
+    scan_type: full
+```
+
+The YAML format allows for future extensibility with additional options per target.
+
 ```bash
 # Scan targets from default file (targets.txt)
 zap-scan batch
+
+# Scan targets from YAML file
+zap-scan batch --config targets.yaml
 
 # Scan targets from custom file
 zap-scan batch --config my-targets.txt
@@ -361,6 +384,8 @@ Or using shell scripts:
 
 Using Python CLI with batch command:
 
+**Using plain text format (.txt):**
+
 ```bash
 # Create targets.txt with your URLs
 cat > targets.txt << EOF
@@ -371,6 +396,27 @@ EOF
 
 # Run batch scan
 zap-scan batch
+```
+
+**Using YAML format (.yaml) - Recommended:**
+
+```bash
+# Create targets.yaml with structured config
+cat > targets.yaml << EOF
+targets:
+  - url: https://www.example.com
+    scan_type: baseline
+  - url: https://api.example.com
+    scan_type: full
+  - url: https://admin.example.com
+    scan_type: baseline
+EOF
+
+# Run batch scan
+zap-scan batch --config targets.yaml
+```
+
+The YAML format is recommended as it allows for future extensibility with additional options like credentials, custom configurations, and exclusion patterns.
 ```
 
 Or using shell script:
